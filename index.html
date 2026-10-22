@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071c4f">
+<title>Mis Ganancias</title>
+<style>
+  :root{
+    --bg:#071c4f;
+    --card:rgba(255,255,255,.07);
+    --card-b:rgba(255,255,255,.13);
+    --text:#fff;
+    --muted:rgba(255,255,255,.62);
+    --blue:#2f7bff;
+    --blue-l:#5cb8ff;
+    --down:#ff5c6c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  html{background:var(--bg)}
+  body{
+    margin:0;color:var(--text);min-height:100vh;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:22px 16px calc(120px + env(safe-area-inset-bottom));
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background:
+      radial-gradient(520px 320px at 50% -90px, rgba(63,130,255,.55), transparent 70%),
+      linear-gradient(180deg,#0b2d7a 0%,#071c4f 50%,#051237 100%);
+  }
+  button{font-family:inherit}
+  .wrap{max-width:640px;margin:0 auto}
+
+  /* Encabezado */
+  .eyebrow{font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-l)}
+  h1{margin:2px 0 12px;font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+  .head-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{
+    border:0;background:rgba(92,184,255,.18);color:#bfe3ff;
+    font-size:.8rem;font-weight:600;padding:9px 14px;border-radius:999px;cursor:pointer;
+  }
+
+  input{
+    width:100%;background:rgba(255,255,255,.07);color:#fff;
+    border:1px solid rgba(255,255,255,.14);border-radius:12px;
+    padding:12px 14px;font-size:16px;font-family:inherit;outline:none;
+  }
+  input:focus{border-color:var(--blue-l);box-shadow:0 0 0 3px rgba(92,184,255,.25)}
+  input::placeholder{color:rgba(255,255,255,.35)}
+  input[type=date]{color-scheme:dark;width:auto;min-width:170px;padding:9px 14px;border-radius:999px}
+  label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:6px}
+
+  /* Tarjeta de total */
+  .hero{
+    position:relative;overflow:hidden;border-radius:24px;padding:20px;margin-bottom:18px;
+    background:linear-gradient(135deg,#2f7bff 0%,#1f4fd6 55%,#1a3aa3 100%);
+    box-shadow:0 14px 36px rgba(20,70,200,.45);
+  }
+  .hero::after{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.1)}
+  .hero > *{position:relative;z-index:1}
+  .hero-label{font-size:.82rem;opacity:.85}
+  .hero-amount{font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin:4px 0 6px;word-break:break-word}
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .stat{background:rgba(255,255,255,.15);border-radius:16px;padding:12px}
+  .stat small{display:block;font-size:.7rem;opacity:.9;margin-bottom:3px}
+  .stat strong{font-size:1.35rem;font-weight:700}
+
+  /* Indicadores de subida / bajada */
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;margin-top:4px}
+  .pill.up{background:rgba(92,184,255,.18);color:#8fd0ff}
+  .pill.down{background:rgba(255,92,108,.18);color:#ff8f9b}
+  .pill.flat{background:rgba(255,255,255,.12);color:#dbe7ff}
+  .hero .pill{background:#fff}
+  .hero .pill.up{color:#1d63ff}
+  .hero .pill.down{color:#d92d42}
+  .hero .pill.flat{color:#44578a}
+
+  /* Ganancias */
+  .entry{
+    background:var(--card);border:1px solid var(--card-b);border-radius:20px;
+    padding:14px;margin-bottom:12px;
+  }
+  .entry-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .idx{
+    flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);
+    display:grid;place-items:center;font-size:.8rem;font-weight:700;
+  }
+  .name-input{
+    flex:1;background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.18);
+    border-radius:0;padding:8px 2px;
+  }
+  .name-input:focus{box-shadow:none;border-bottom-color:var(--blue-l)}
+  .x-btn{
+    flex:0 0 32px;height:32px;border-radius:50%;border:0;
+    background:rgba(255,255,255,.08);color:var(--muted);font-size:.9rem;cursor:pointer;
+  }
+  .x-btn:active{background:rgba(255,92,108,.3);color:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .empty{
+    text-align:center;color:var(--muted);padding:26px 16px;font-size:.92rem;line-height:1.5;
+    border:1px dashed rgba(255,255,255,.22);border-radius:20px;margin-bottom:12px;
+  }
+  .empty b{color:#fff}
+  .link-danger{display:block;margin:4px auto 0;background:none;border:0;color:#ff8f9b;font-size:.8rem;padding:10px;cursor:pointer}
+
+  /* Gráfica */
+  .card{background:var(--card);border:1px solid var(--card-b);border-radius:20px;padding:16px;margin-bottom:16px}
+  .card h2,.section-title{margin:0 0 12px;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-l)}
+  .seg{display:flex;background:rgba(255,255,255,.08);border-radius:999px;padding:4px;margin-bottom:10px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px;border-radius:999px;font-size:.82rem;font-weight:600;cursor:pointer}
+  .seg button.on{background:var(--blue);color:#fff}
+  svg.chart{display:block;width:100%;height:auto}
+  .chart-msg{color:var(--muted);font-size:.88rem;text-align:center;padding:18px 0}
+  .legend{font-size:.75rem;color:var(--muted);text-align:center;margin-top:8px}
+  .legend .u{color:#8fd0ff}
+  .legend .d{color:#ff8f9b}
+
+  /* Historial */
+  .day-row{
+    width:100%;text-align:left;display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--card-b);border-radius:18px;
+    padding:12px;margin-bottom:10px;color:#fff;cursor:pointer;
+  }
+  .day-row:active{background:rgba(255,255,255,.14)}
+  .dbadge{
+    flex:0 0 50px;height:54px;border-radius:14px;background:rgba(47,123,255,.3);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;
+  }
+  .dbadge b{font-size:1.2rem}
+  .dbadge span{font-size:.62rem;text-transform:uppercase;color:#bcd6ff;letter-spacing:.06em}
+  .dmid{flex:1;min-width:0}
+  .dmid strong{display:block;font-size:.95rem}
+  .dmid small{color:var(--muted);font-size:.75rem}
+  .dright{text-align:right}
+  .dright b{display:block;font-size:1rem}
+  .chev{color:var(--muted);font-size:1.3rem;margin-left:2px}
+
+  /* Menú inferior */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:rgba(7,28,79,.96);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid rgba(255,255,255,.12);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .nav-inner{max-width:640px;margin:0 auto;height:64px;display:grid;grid-template-columns:1fr 92px 1fr;align-items:center}
+  .tab{
+    background:none;border:0;height:100%;color:rgba(255,255,255,.55);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font-size:.7rem;font-weight:600;cursor:pointer;
+  }
+  .tab svg{width:24px;height:24px}
+  .tab.active{color:#fff}
+  .tab.active svg{color:var(--blue-l)}
+  .fab-slot{position:relative;height:100%}
+  .fab{
+    position:absolute;left:50%;top:-30px;transform:translateX(-50%);
+    width:66px;height:66px;border-radius:50%;border:5px solid var(--bg);
+    background:linear-gradient(145deg,#4f9bff,#1d5fe0);cursor:pointer;
+    display:grid;place-items:center;padding:0;
+    box-shadow:0 10px 26px rgba(47,123,255,.6);
+  }
+  .fab:active{transform:translateX(-50%) scale(.93)}
+  .fab svg{width:28px;height:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== HOY / DÍA ===== -->
+  <section id="viewToday">
+    <div class="eyebrow" id="eyebrow">Hoy</div>
+    <h1 id="dateTitle"></h1>
+    <div class="head-row">
+      <input type="date" id="datePicker" aria-label="Elegir día">
+      <button class="chip" id="backToday" hidden>← Volver a hoy</button>
+    </div>
+
+    <div class="hero">
+      <div class="hero-label">Total del día</div>
+      <div class="hero-amount" id="totMoney">$0.00</div>
+      <span class="pill flat" id="trMoney" hidden></span>
+      <div class="hero-stats">
+        <div class="stat">
+          <small>Objetos vendidos</small>
+          <strong id="totItems">0</strong><br>
+          <span class="pill flat" id="trItems" hidden></span>
+        </div>
+        <div class="stat">
+          <small>Ganancias</small>
+          <strong id="totCount">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Ganancias del día</div>
+    <div id="list"></div>
+  </section>
+
+  <!-- ===== HISTORIAL ===== -->
+  <section id="viewHist" hidden>
+    <div class="eyebrow">Resumen</div>
+    <h1>Historial</h1>
+
+    <div class="card">
+      <div class="seg" id="seg">
+        <button type="button" data-metric="money" class="on">Recaudado</button>
+        <button type="button" data-metric="items">Objetos</button>
+      </div>
+      <div id="chart"></div>
+      <div class="legend"><span class="u">↑ azul: ganó más que el día anterior</span> · <span class="d">↓ rojo: ganó menos</span></div>
+    </div>
+
+    <div class="section-title">Días anteriores</div>
+    <div id="histList"></div>
+  </section>
+
+</div>
+
+<!-- ===== MENÚ INFERIOR ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="tab active" data-view="today" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Hoy
+    </button>
+    <div class="fab-slot">
+      <button class="fab" id="fab" type="button" aria-label="Crear nueva ganancia" title="Crear nueva ganancia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <button class="tab" data-view="history" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Historial
+    </button>
+  </div>
+</nav>
+
+<script>
+(function(){
+  var KEY = 'ganancias_dia_v1';
+  var all = {};
+  try { all = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) { all = {}; }
+
+  var C_UP = '#5cb8ff', C_DOWN = '#ff5c6c', C_FLAT = '#dbe7ff';
+  var metric = 'money';
+  var view = 'today';
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function fmtMoney(n){
+    return '$' + n.toLocaleString('es', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function fmtNum(n){ return n.toLocaleString('es', {maximumFractionDigits:2}); }
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+  function parseDay(d){ return new Date(d + 'T00:00:00'); }
+
+  var currentDate = todayStr();
+  var entries = all[currentDate] || [];
+
+  var $viewToday = document.getElementById('viewToday');
+  var $viewHist = document.getElementById('viewHist');
+  var $list = document.getElementById('list');
+  var $date = document.getElementById('datePicker');
+  var $back = document.getElementById('backToday');
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+
+  function save(){
+    all[currentDate] = entries;
+    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch(e) {}
+  }
+
+  /* ---------- Datos por día ---------- */
+  function listFor(d){ return d === currentDate ? entries : (all[d] || []); }
+
+  function totalsFor(d){
+    var m = 0, it = 0;
+    listFor(d).forEach(function(e){ m += num(e.money); it += num(e.items); });
+    return {money: m, items: it};
+  }
+
+  function recordedDays(){
+    var set = {};
+    Object.keys(all).forEach(function(d){
+      if(d !== currentDate && all[d] && all[d].length) set[d] = 1;
+    });
+    if(entries.length) set[currentDate] = 1;
+    return Object.keys(set).sort();
+  }
+
+  function trend(cur, prev, fmt){
+    if(prev == null) return {dir:'first', cls:'flat', arrow:'', text:''};
+    var c = Math.round(cur*100), p = Math.round(prev*100);
+    var diff = Math.abs(c - p) / 100;
+    if(c > p) return {dir:'up', cls:'up', arrow:'↑', text:'+' + fmt(diff)};
+    if(c < p) return {dir:'down', cls:'down', arrow:'↓', text:'−' + fmt(diff)};
+    return {dir:'same', cls:'flat', arrow:'=', text:'Igual'};
+  }
+
+  function buildRows(){
+    var days = recordedDays();
+    return days.map(function(d, i){
+      var t = totalsFor(d);
+      var prev = i > 0 ? totalsFor(days[i-1]) : null;
+      return {
+        date: d, money: t.money, items: t.items, count: listFor(d).length,
+        tm: trend(t.money, prev ? prev.money : null, fmtMoney),
+        ti: trend(t.items, prev ? prev.items : null, fmtNum)
+      };
+    });
+  }
+
+  function setPill(node, tr, suffix, show){
+    if(!show || tr.dir === 'first'){ node.hidden = true; return; }
+    node.hidden = false;
+    node.className = 'pill ' + tr.cls;
+    node.textContent = tr.dir === 'same' ? '= Igual' : tr.arrow + ' ' + tr.text + (suffix ? ' ' + suffix : '');
+  }
+
+  /* ---------- Tarjeta de total ---------- */
+  function renderHero(){
+    var t = totalsFor(currentDate);
+    document.getElementById('totMoney').textContent = fmtMoney(t.money);
+    document.getElementById('totItems').textContent = fmtNum(t.items);
+    document.getElementById('totCount').textContent = entries.length;
+    var before = recordedDays().filter(function(d){ return d < currentDate; });
+    var prev = before.length ? totalsFor(before[before.length-1]) : null;
+    var has = entries.length > 0;
+    setPill(document.getElementById('trMoney'), trend(t.money, prev ? prev.money : null, fmtMoney), 'vs día anterior', has);
+    setPill(document.getElementById('trItems'), trend(t.items, prev ? prev.items : null, fmtNum), '', has);
+  }
+
+  /* ---------- Gráfica de picos ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function sv(name, attrs, parent){
+    var n = document.createElementNS(NS, name);
+    Object.keys(attrs).forEach(function(k){ n.setAttribute(k, attrs[k]); });
+    if(parent) parent.appendChild(n);
+    return n;
+  }
+  function shortDate(d){ return d.slice(8,10) + '/' + d.slice(5,7); }
+  function colorFor(tr){ return tr.dir === 'up' ? C_UP : (tr.dir === 'down' ? C_DOWN : C_FLAT); }
+
+  function drawChart(host, rows, key, tkey){
+    host.innerHTML = '';
+    if(!rows.length){
+      var m = document.createElement('div');
+      m.className = 'chart-msg';
+      m.textContent = 'Todavía no hay datos para graficar.';
+      host.appendChild(m);
+      return;
+    }
+    var W = 340, H = 210, padL = 26, padR = 26, padT = 36, padB = 28;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    var vals = rows.map(function(r){ return r[key]; });
+    var max = Math.max.apply(null, vals.concat([1])) * 1.1;
+
+    var svg = sv('svg', {viewBox:'0 0 '+W+' '+H, 'class':'chart', role:'img', 'aria-label':'Gráfica por día'}, null);
+
+    [0, 1/3, 2/3, 1].forEach(function(f){
+      var y = padT + ph * f;
+      sv('line', {x1:padL-10, x2:W-padR+10, y1:y, y2:y,
+        stroke: f === 1 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.08)', 'stroke-width':1}, svg);
+    });
+
+    var pts = rows.map(function(r, i){
+      return {
+        x: rows.length === 1 ? W/2 : padL + i * pw / (rows.length - 1),
+        y: padT + ph * (1 - r[key] / max)
+      };
+    });
+
+    if(pts.length > 1){
+      var base = padT + ph;
+      var dpath = 'M' + pts[0].x + ',' + base + ' L' +
+        pts.map(function(p){ return p.x + ',' + p.y; }).join(' L') +
+        ' L' + pts[pts.length-1].x + ',' + base + ' Z';
+      sv('path', {d:dpath, fill:'rgba(92,184,255,.12)'}, svg);
+    }
+
+    for(var i = 1; i < pts.length; i++){
+      sv('line', {x1:pts[i-1].x, y1:pts[i-1].y, x2:pts[i].x, y2:pts[i].y,
+        stroke: colorFor(rows[i][tkey]), 'stroke-width':2.5, 'stroke-linecap':'round'}, svg);
+    }
+
+    rows.forEach(function(r, idx){
+      var p = pts[idx], tr = r[tkey], col = colorFor(tr);
+      if(tr.dir === 'up' || tr.dir === 'down'){
+        var s = tr.dir === 'up' ? 1 : -1;
+        var poly = [[0,-9],[6,-1],[2.5,-1],[2.5,8],[-2.5,8],[-2.5,-1],[-6,-1]].map(function(q){
+          return (p.x + q[0]) + ',' + (p.y + q[1]*s);
+        }).join(' ');
+        sv('polygon', {points:poly, fill:col, stroke:'#071c4f', 'stroke-width':1}, svg);
+      } else {
+        sv('circle', {cx:p.x, cy:p.y, r:4, fill:col, stroke:'#071c4f', 'stroke-width':1}, svg);
+      }
+      var v = sv('text', {x:p.x, y:p.y - 14, 'text-anchor':'middle', 'font-size':10, 'font-weight':600, fill:'#ffffff'}, svg);
+      v.textContent = fmtNum(r[key]);
+      var t = sv('text', {x:p.x, y:H - 8, 'text-anchor':'middle', 'font-size':10, fill:'rgba(255,255,255,.55)'}, svg);
+      t.textContent = shortDate(r.date);
+    });
+
+    host.appendChild(svg);
+  }
+
+  function renderChart(){
+    var rows = buildRows().slice(-8);
+    var isMoney = metric === 'money';
+    drawChart(document.getElementById('chart'), rows, isMoney ? 'money' : 'items', isMoney ? 'tm' : 'ti');
+  }
+
+  /* ---------- Historial de días ---------- */
+  function renderHistoryList(){
+    var host = document.getElementById('histList');
+    host.innerHTML = '';
+    var rows = buildRows().reverse();
+    if(!rows.length){
+      var box = document.createElement('div');
+      box.className = 'empty';
+      box.textContent = 'Todavía no hay días registrados.';
+      host.appendChild(box);
+      return;
+    }
+    var today = todayStr();
+    rows.forEach(function(r){
+      var dt = parseDay(r.date);
+      var row = document.createElement('button');
+      row.type = 'button'; row.className = 'day-row';
+
+      var badge = document.createElement('div'); badge.className = 'dbadge';
+      var bd = document.createElement('b'); bd.textContent = dt.getDate();
+      var bm = document.createElement('span'); bm.textContent = dt.toLocaleDateString('es', {month:'short'}).replace('.', '');
+      badge.appendChild(bd); badge.appendChild(bm);
+
+      var mid = document.createElement('div'); mid.className = 'dmid';
+      var st = document.createElement('strong');
+      st.textContent = cap(dt.toLocaleDateString('es', {weekday:'long'})) + (r.date === today ? ' · Hoy' : '');
+      var sm = document.createElement('small');
+      sm.textContent = r.count + (r.count === 1 ? ' ganancia' : ' ganancias') + ' · ' + fmtNum(r.items) + ' obj.';
+      mid.appendChild(st); mid.appendChild(sm);
+
+      var right = document.createElement('div'); right.className = 'dright';
+      var rb = document.createElement('b'); rb.textContent = fmtMoney(r.money);
+      var pl = document.createElement('span');
+      if(r.tm.dir === 'first'){
+        pl.className = 'pill flat'; pl.textContent = 'Primer día';
+      } else {
+        pl.className = 'pill ' + r.tm.cls;
+        pl.textContent = r.tm.dir === 'same' ? '= Igual' : r.tm.arrow + ' ' + r.tm.text;
+      }
+      right.appendChild(rb); right.appendChild(pl);
+
+      var chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '›';
+
+      row.appendChild(badge); row.appendChild(mid); row.appendChild(right); row.appendChild(chev);
+      row.addEventListener('click', function(){ openDay(r.date); });
+      host.appendChild(row);
+    });
+  }
+
+  /* ---------- Vista de Hoy / Día ---------- */
+  function renderDateHeader(){
+    var dt = parseDay(currentDate);
+    var isToday = currentDate === todayStr();
+    document.getElementById('dateTitle').textContent =
+      cap(dt.toLocaleDateString('es', {weekday:'long', day:'numeric', month:'long'}));
+    document.getElementById('eyebrow').textContent = isToday ? 'Hoy' : 'Otro día';
+    $back.hidden = isToday;
+    $date.value = currentDate;
+  }
+
+  function buildEntry(e, i){
+    var card = document.createElement('div');
+    card.className = 'entry';
+
+    var top = document.createElement('div'); top.className = 'entry-top';
+    var idx = document.createElement('div'); idx.className = 'idx'; idx.textContent = i + 1;
+    var ni = document.createElement('input');
+    ni.type = 'text'; ni.className = 'name-input'; ni.placeholder = 'Descripción (opcional)';
+    ni.value = e.name || '';
+    ni.addEventListener('input', function(){ e.name = ni.value; save(); });
+    var del = document.createElement('button');
+    del.className = 'x-btn'; del.type = 'button'; del.title = 'Eliminar'; del.textContent = '✕';
+    del.addEventListener('click', function(){
+      entries = entries.filter(function(x){ return x.id !== e.id; });
+      save(); renderAll();
+    });
+    top.appendChild(idx); top.appendChild(ni); top.appendChild(del);
+
+    var grid = document.createElement('div'); grid.className = 'grid2';
+
+    var g1 = document.createElement('div');
+    var l1 = document.createElement('label'); l1.textContent = 'Recaudado ($)';
+    var i1 = document.createElement('input'); i1.type = 'number'; i1.inputMode = 'decimal';
+    i1.min = '0'; i1.step = 'any'; i1.placeholder = '0.00';
+    i1.value = (e.money === '' || e.money == null) ? '' : e.money;
+    i1.addEventListener('input', function(){
+      e.money = i1.value === '' ? '' : num(i1.value);
+      save(); refreshStats();
+    });
+    g1.appendChild(l1); g1.appendChild(i1);
+
+    var g2 = document.createElement('div');
+    var l2 = document.createElement('label'); l2.textContent = 'Objetos vendidos';
+    var i2 = document.createElement('input'); i2.type = 'number'; i2.inputMode = 'numeric';
+    i2.min = '0'; i2.step = '1'; i2.placeholder = '0';
+    i2.value = (e.items === '' || e.items == null) ? '' : e.items;
+    i2.addEventListener('input', function(){
+      e.items = i2.value === '' ? '' : num(i2.value);
+      save(); refreshStats();
+    });
+    g2.appendChild(l2); g2.appendChild(i2);
+
+    grid.appendChild(g1); grid.appendChild(g2);
+    card.appendChild(top); card.appendChild(grid);
+    return card;
+  }
+
+  function renderEntries(){
+    $list.innerHTML = '';
+    if(!entries.length){
+      var box = document.createElement('div'); box.className = 'empty';
+      box.innerHTML = 'Aún no hay ganancias en este día.<br>Toca el botón <b>+</b> para crear una.';
+      $list.appendChild(box);
+      return;
+    }
+    entries.forEach(function(e, i){ $list.appendChild(buildEntry(e, i)); });
+    var reset = document.createElement('button');
+    reset.type = 'button'; reset.className = 'link-danger'; reset.textContent = 'Borrar todo el día';
+    reset.addEventListener('click', function(){
+      if(confirm('¿Borrar todas las ganancias de este día?')){
+        entries = []; save(); renderAll();
+      }
+    });
+    $list.appendChild(reset);
+  }
+
+  function refreshStats(){
+    renderHero();
+    renderChart();
+    renderHistoryList();
+  }
+
+  function renderAll(){
+    renderDateHeader();
+    renderEntries();
+    refreshStats();
+  }
+
+  /* ---------- Navegación ---------- */
+  function showView(name){
+    view = name;
+    $viewToday.hidden = name !== 'today';
+    $viewHist.hidden = name !== 'history';
+    tabs.forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-view') === name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function openDay(d){
+    save();
+    currentDate = d;
+    entries = all[d] || [];
+    showView('today');
+    renderAll();
+  }
+
+  function addEntry(){
+    if(view !== 'today') showView('today');
+    entries.push({id: uid(), name: '', money: '', items: ''});
+    save(); renderAll();
+    var cards = $list.querySelectorAll('.entry');
+    var last = cards[cards.length - 1];
+    if(last){
+      last.scrollIntoView({behavior:'smooth', block:'center'});
+      var inp = last.querySelector('input[type=number]');
+      if(inp) inp.focus({preventScroll:true});
+    }
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ showView(t.getAttribute('data-view')); });
+  });
+  document.getElementById('fab').addEventListener('click', addEntry);
+
+  Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function(b){
+    b.addEventListener('click', function(){
+      metric = b.getAttribute('data-metric');
+      Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function(x){
+        x.classList.toggle('on', x === b);
+      });
+      renderChart();
+    });
+  });
+
+  $back.addEventListener('click', function(){ openDay(todayStr()); });
+  $date.addEventListener('change', function(){
+    if($date.value) openDay($date.value);
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
